@@ -61,10 +61,10 @@ float RI_WATER = 1.33;
 float RI_GLASS = 1.5;
 
 // MATERIALS
-Material *mat1 = new Material(MAGENTA, MAGENTA, MAGENTA,  2, 0.0,  0.2, RI_AIR, RI_GLASS);
-Material *mat2 = new Material(CYAN, CYAN, CYAN,  2, 0.2,  1.0, RI_AIR, RI_GLASS);
-Material *mat3 = new Material(YELLOW, YELLOW, YELLOW,  2, 0.0,  0.8, RI_AIR, RI_GLASS);
-Material *mat4 = new Material(BLUE, BLUE, BLUE,  2, 0.1,  1.0, RI_AIR, RI_GLASS);
+Material *mat1 = new Material(MAGENTA * 0.1, MAGENTA * 0.5, MAGENTA * 0.4,  2, 0.0,  0.2, RI_AIR, RI_GLASS);
+Material *mat2 = new Material(CYAN * 0.1, CYAN * 0.5, CYAN * 0.4,  2, 0.2,  1.0, RI_AIR, RI_GLASS);
+Material *mat3 = new Material(YELLOW * 0.1, YELLOW * 0.5, YELLOW * 0.4,  2, 0.0,  1, RI_AIR, RI_GLASS);
+Material *mat4 = new Material(BLUE * 0.1, BLUE* 0.5, BLUE * 0.4,  2, 0.1,  1.0, RI_AIR, RI_GLASS);
 
 void insertItems(World &world) {
     world.insert(Sphere(Vector3f(0, 5, 0), 3, mat1));
@@ -144,7 +144,7 @@ void Timer(int unused) {
 
 int main(int argc, char* argv[]) {
     World world (false);
-    world.setLight(Vector3f(-4, 11, 3));
+    world.insertLight(Vector3f(-4, 11, 3), Vector3f(1, 1, 1));
     
     insertItems(world);
     data.clear();
@@ -176,6 +176,33 @@ Vector3f reflectDirection(Vector3f in, Vector3f normal) {
     return n * 2 + in;
 }
 
+Vector3f localIllumination(Vector3f point, Vector3f normal, Vector3f raydir, Material *mat, World world) {
+    int size = world.pointLights.size();
+    Vector3f color = Vector3f(0, 0, 0);
+    for (int i = 0; i < size; i++) {
+        Vector3f lightpos = world.pointLights[i].position;
+        Vector3f lightcolor = world.pointLights[i].color;
+
+        // ambient
+        color += mat -> ambient;
+        Vector3f lightvec = lightpos - point;
+
+        // diffuse
+        float difFactor = lightvec.normalized().dot(point);
+        if (difFactor < 0) difFactor *= mat -> alpha - 1;
+        float shadow = 1;
+        if (world.rayCast(Ray(point, lightvec), lightvec.norm())) shadow = SHADOW_FACTOR;
+        color += (mat -> diffuse).cwiseProduct(lightcolor) * difFactor * shadow;
+
+        // Specular
+        Vector3f lightout = reflectDirection(-lightvec.normalized(), normal);
+        float speFactor_sub = lightout.dot(-raydir);
+        float speFactor = (speFactor_sub < 0)? 0 : pow(speFactor_sub, mat -> shininess);
+        color += (mat -> specular).cwiseProduct(lightcolor) * speFactor * shadow;
+    }
+    return color;
+}
+
 Vector3f rayTracer(World &world, Ray ray, int depth) {
     if (depth == 0) return default_color;
 
@@ -183,8 +210,6 @@ Vector3f rayTracer(World &world, Ray ray, int depth) {
     if (world.rayCast(ray, INF, target)) {
         Material *mat = target.material;
 
-
-        Vector3f matcolor = mat -> color;
         float alpha = mat -> alpha;
         float reflectivity = mat -> reflectivity;
 
@@ -196,26 +221,8 @@ Vector3f rayTracer(World &world, Ray ray, int depth) {
 
         // Object Color
         if (reflectivity < 1 && alpha > 0) {
-            // Ambient
-            object_color = matcolor * (mat -> famb);
-
-            // Diffuse
-            Vector3f lightvec = world.light - target.point;
-            float difFactor = lightvec.normalized().dot(target.normal);
-            if (difFactor < 0) difFactor *= alpha - 1;
-            float shadow = 1;
-            if (world.rayCast(Ray(target.point, world.light - target.point, ray.refidx), lightvec.norm())) shadow = SHADOW_FACTOR;
-            object_color += matcolor * (mat -> fdif) * difFactor * shadow;
-
-            // Specular
-            Vector3f lightout = reflectDirection(-lightvec.normalized(), target.normal);
-            float speFactor_sub = lightout.dot(-ray.direction);
-            float speFactor = (speFactor_sub < 0)? 0 : pow(speFactor_sub, mat -> shininess);
-            object_color += matcolor * (mat -> fspe) * speFactor * shadow;
-
-            object_color *= (1 - reflectivity) * alpha;
+            object_color = localIllumination(target.point, target.normal, ray.direction, mat, world) * (1 - reflectivity) * alpha;
         }
-
 
         // Reflection
         Vector3f reflDir = reflectDirection(ray.direction, target.normal);

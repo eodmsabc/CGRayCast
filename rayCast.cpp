@@ -1,6 +1,12 @@
 
 #include "rayCast.h"
 
+Ray::Ray(Eigen::Vector3f s, Eigen::Vector3f d) {
+    start = s;
+    direction = d.normalized();
+    refidx = 1.0;
+}
+
 Ray::Ray(Eigen::Vector3f s, Eigen::Vector3f d, float ri) {
     start = s;
     direction = d.normalized();
@@ -31,12 +37,21 @@ Sphere::Sphere(Eigen::Vector3f c, float r, Material *mat) {
     material = mat;
 }
 
+Light::Light(Eigen::Vector3f p, Eigen::Vector3f c) {
+    position = p;
+    color = c;
+}
+
 World::World(bool bt) {
     bspTrigger = bt;
 }
 
-void World::insertLight(Eigen::Vector3f l) {
+void World::insertLight(Light l) {
     pointLights.push_back(l);
+}
+
+void World::insertLight(Eigen::Vector3f p, Eigen::Vector3f c) {
+    pointLights.push_back(Light(p, c));
 }
 
 void World::insert(Plane p) {

@@ -15,6 +15,7 @@ public:
     Eigen::Vector3f start;
     Eigen::Vector3f direction;
     float refidx;
+    Ray(Eigen::Vector3f, Eigen::Vector3f);
     Ray(Eigen::Vector3f, Eigen::Vector3f, float);
 };
 
@@ -51,16 +52,24 @@ public:
     Sphere(Eigen::Vector3f, float, Material*);
 };
 
+struct Light {
+    Eigen::Vector3f position;
+    Eigen::Vector3f color;
+    Light();
+    Light(Eigen::Vector3f, Eigen::Vector3f);
+};
+
 class World {
 public:
     PNode *bsproot;
     std::vector<Plane> planeList;
     std::vector<Sphere> sphereList;
     bool bspTrigger;
-    std::vector<Eigen::Vector3f> pointLights;
+    std::vector<Light> pointLights;
 
     World(bool);
-    void insertLight(Eigen::Vector3f);
+    void insertLight(Light);
+    void insertLight(Eigen::Vector3f, Eigen::Vector3f);
     void insert(Plane);
     void insert(Sphere);
     
