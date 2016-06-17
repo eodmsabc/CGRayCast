@@ -182,6 +182,7 @@ Vector3f rayTracer(World &world, Ray ray, int depth) {
     if (world.rayCast(ray, INF, target)) {
         Material *mat = target.material;
 
+
         Vector3f matcolor = mat -> color;
         float alpha = mat -> alpha;
         float reflectivity = mat -> reflectivity;
