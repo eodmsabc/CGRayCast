@@ -12,6 +12,7 @@
 
 #include "material.h"
 #include "rayCast.h"
+#include "bitmap_image.hpp"
 
 using namespace std;
 using namespace Eigen;
