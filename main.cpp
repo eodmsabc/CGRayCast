@@ -43,7 +43,6 @@ const int RAY_TRACE_DEPTH = 6;
 const float SHADOW_FACTOR = 0.3;
 
 // COLORS
-Vector3f default_color (0.4, 0.4, 0.4);
 Vector3f BLACK (0.0, 0.0, 0.0);
 Vector3f DARK_GRAY (0.7, 0.7, 0.7);
 Vector3f LIGHT_GRAY (0.3, 0.3, 0.3);
@@ -55,21 +54,29 @@ Vector3f CYAN (0.0, 1.0, 1.0);
 Vector3f MAGENTA (1.0, 0.0, 1.0);
 Vector3f YELLOW (1.0, 1.0, 0.0);
 
+Vector3f default_color = LIGHT_GRAY;
+
 // REFRACTION INDICES
 float RI_AIR = 1.0;
 float RI_WATER = 1.33;
 float RI_GLASS = 1.5;
+float RI_EMERALD = 1.58;
+float RI_RUBY = 1.76;
 
 // MATERIALS
 Material *mat1 = new Material(MAGENTA * 0.1, MAGENTA * 0.5, MAGENTA * 0.4,  2, 0.0,  0.2, RI_AIR, RI_GLASS);
 Material *mat2 = new Material(CYAN * 0.1, CYAN * 0.5, CYAN * 0.4,  2, 0.2,  1.0, RI_AIR, RI_GLASS);
 Material *mat3 = new Material(YELLOW * 0.1, YELLOW * 0.5, YELLOW * 0.4,  2, 0.0,  1, RI_AIR, RI_GLASS);
 Material *mat4 = new Material(BLUE * 0.1, BLUE* 0.5, BLUE * 0.4,  2, 0.1,  1.0, RI_AIR, RI_GLASS);
+Material *EMERALD = new Material(0.0215, 0.1745, 0.0215, 0.07568, 0.61424, 0.07568, 0.633, 0.727811, 0.633, 0.6, 0.3, 0.6, RI_AIR, RI_GLASS);
+Material *RUBY = new Material(0.1745, 0.01175, 0.01175, 0.61424, 0.04136, 0.04136, 0.727811, 0.626959, 0.626959, 0.6, 0.2, 0.5, RI_AIR, 
+RI_RUBY);
+Material *GOLD = new Material(0.24725, 0.1995, 0.0745, 0.75164, 0.60648, 0.22648, 0.628281, 0.555802, 0.366065, 0.4, 0.0, 1.0, RI_AIR, RI_AIR);
 
 void insertItems(World &world) {
-    world.insert(Sphere(Vector3f(0, 5, 0), 3, mat1));
-    world.insert(Sphere(Vector3f(-4, 6, -10), 3, mat2));
-    world.insert(Sphere(Vector3f(-7, 5, -40), 15, mat3));
+    world.insert(Sphere(Vector3f(2, 5, -4), 3, mat1));
+    world.insert(Sphere(Vector3f(-4, 6, -10), 3, EMERALD));
+    world.insert(Sphere(Vector3f(-7, 5, -40), 15, GOLD));
     world.insert(Sphere(Vector3f(-10, 4, -5), 4, mat4));
 }
 
@@ -188,7 +195,7 @@ Vector3f localIllumination(Vector3f point, Vector3f normal, Vector3f raydir, Mat
         Vector3f lightvec = lightpos - point;
 
         // diffuse
-        float difFactor = lightvec.normalized().dot(point);
+        float difFactor = lightvec.normalized().dot(normal);
         if (difFactor < 0) difFactor *= mat -> alpha - 1;
         float shadow = 1;
         if (world.rayCast(Ray(point, lightvec), lightvec.norm())) shadow = SHADOW_FACTOR;

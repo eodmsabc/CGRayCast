@@ -127,8 +127,8 @@ bool isIntersect(Plane p, Ray r, float &dist) {
     // Plane collide
     float d = p.normal.dot(p.vertices[0]);
     bool samedir = r.direction.dot(p.normal) > 0;
-    bool big = r.start.dot(p.normal) > d;
-    if (samedir ^ big) return false;
+    bool small = r.start.dot(p.normal) < d;
+    if (samedir ^ small) return false;
     // Inside polygin
     return false;
 }

@@ -15,6 +15,7 @@ public:
     float refidx_p;
     float refidx_n;
     Material(Eigen::Vector3f, Eigen::Vector3f, Eigen::Vector3f, float, float, float, float, float);
+    Material(float, float, float, float, float, float, float, float, float, float, float, float, float, float);
 };
 
 #endif
