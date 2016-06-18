@@ -122,15 +122,30 @@ bool World::rayCast(Ray r, float threshold) {
     return rayCast(r, threshold, dummy);
 }
 
+bool sameSideWithCenter(Eigen::Vector3f a, Eigen::Vector3f b, Eigen::Vector3f c, Eigen::Vector3f target) {
+    Eigen::Vector3f line = a - b;
+    Eigen::Vector3f cc = c - b;
+    float t = line.dot(cc) / line.dot(line);
+    Eigen::Vector3f h = cc - line * t;
+    return h.dot(target - b) > 0;
+}
+
 // Intersection
 bool isIntersect(Plane p, Ray r, float &dist) {
-    // Plane collide
     float d = p.normal.dot(p.vertices[0]);
-    bool samedir = r.direction.dot(p.normal) > 0;
-    bool small = r.start.dot(p.normal) < d;
-    if (samedir ^ small) return false;
-    // Inside polygin
-    return false;
+    dist = (d - r.start.dot(p.normal)) / r.direction.dot(p.normal);
+    if (dist < 0.0001) return false;
+
+    Eigen::Vector3f center(0, 0, 0);
+    int size = p.vertices.size();
+    for (int i = 0; i < size; i++) {
+        center += p.vertices[i];
+    }
+    center /= size;
+    for (int i = 0; i < size; i++) {
+        if (!sameSideWithCenter(p.vertices[i], p.vertices[(i+1)%size], center, r.start + r.direction * dist)) return false;
+    }
+    return true;
 }
 
 bool isIntersect(Sphere s, Ray r, float &dist) {

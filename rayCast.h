@@ -83,6 +83,7 @@ private:
     void split(Eigen::Vector3f, float, std::vector<Eigen::Vector3f>&, std::vector<Eigen::Vector3f>&);
 };
 
+bool sameSideWithCenter(Eigen::Vector3f, Eigen::Vector3f, Eigen::Vector3f, Eigen::Vector3f);
 bool isIntersect(Plane, Ray, float &);
 bool isIntersect(Sphere, Ray, float &);
 

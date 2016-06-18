@@ -45,7 +45,7 @@ const float SHADOW_FACTOR = 0.3;
 // COLORS
 Vector3f BLACK (0.0, 0.0, 0.0);
 Vector3f DARK_GRAY (0.7, 0.7, 0.7);
-Vector3f LIGHT_GRAY (0.3, 0.3, 0.3);
+Vector3f LIGHT_GRAY (0.2, 0.2, 0.2);
 Vector3f WHITE (1.0, 1.0, 1.0);
 Vector3f RED (1.0, 0.0, 0.0);
 Vector3f GREEN (0.0, 1.0, 0.0);
@@ -68,16 +68,55 @@ Material *mat1 = new Material(MAGENTA * 0.1, MAGENTA * 0.5, MAGENTA * 0.4,  2, 0
 Material *mat2 = new Material(CYAN * 0.1, CYAN * 0.5, CYAN * 0.4,  2, 0.2,  1.0, RI_AIR, RI_GLASS);
 Material *mat3 = new Material(YELLOW * 0.1, YELLOW * 0.5, YELLOW * 0.4,  2, 0.0,  1, RI_AIR, RI_GLASS);
 Material *mat4 = new Material(BLUE * 0.1, BLUE* 0.5, BLUE * 0.4,  2, 0.1,  1.0, RI_AIR, RI_GLASS);
-Material *EMERALD = new Material(0.0215, 0.1745, 0.0215, 0.07568, 0.61424, 0.07568, 0.633, 0.727811, 0.633, 0.6, 0.3, 0.6, RI_AIR, RI_GLASS);
+Material *ROOM = new Material(0.1, 0.1, 0.1, 0.6, 0.6, 0.6, 0.3, 0.3, 0.3, 0.5, 0.0, 1.0, RI_AIR, RI_AIR);
+Material *EMERALD = new Material(0.0215, 0.1745, 0.0215, 0.07568, 0.61424, 0.07568, 0.633, 0.727811, 0.633, 0.6, 0.3, 0.2, RI_AIR, RI_GLASS);
 Material *RUBY = new Material(0.1745, 0.01175, 0.01175, 0.61424, 0.04136, 0.04136, 0.727811, 0.626959, 0.626959, 0.6, 0.2, 0.5, RI_AIR, 
 RI_RUBY);
 Material *GOLD = new Material(0.24725, 0.1995, 0.0745, 0.75164, 0.60648, 0.22648, 0.628281, 0.555802, 0.366065, 0.4, 0.0, 1.0, RI_AIR, RI_AIR);
+Material *GOLD_IN_EMERALD = new Material(0.24725, 0.1995, 0.0745, 0.75164, 0.60648, 0.22648, 0.628281, 0.555802, 0.366065, 0.4, 0.0, 1.0, RI_EMERALD, RI_AIR);
+
+
+// Draw Primitive Item
+void insertQuad(World &world, Vector3f v1, Vector3f v2, Vector3f v3, Vector3f v4, Vector3f normal, Material *mat) {
+    vector<Vector3f> vertices;
+    vertices.push_back(v1);
+    vertices.push_back(v2);
+    vertices.push_back(v3);
+    vertices.push_back(v4);
+    world.insert(Plane(vertices, normal, mat));
+}
+
+void insertCube(World &world, float x1, float x2, float y1, float y2, float z1, float z2, Material *mat) {
+    Vector3f v0(x1, y1, z1);
+    Vector3f v1(x1, y1, z2);
+    Vector3f v2(x1, y2, z1);
+    Vector3f v3(x1, y2, z2);
+    Vector3f v4(x2, y1, z1);
+    Vector3f v5(x2, y1, z2);
+    Vector3f v6(x2, y2, z1);
+    Vector3f v7(x2, y2, z2);
+    insertQuad(world, v0, v1, v3, v2, Vector3f(-1,  0,  0), mat);
+    insertQuad(world, v4, v5, v7, v6, Vector3f( 1,  0,  0), mat);
+    insertQuad(world, v0, v1, v5, v4, Vector3f( 0, -1,  0), mat);
+    insertQuad(world, v2, v3, v7, v6, Vector3f( 0,  1,  0), mat);
+    insertQuad(world, v0, v2, v6, v4, Vector3f( 0,  0, -1), mat);
+    insertQuad(world, v1, v3, v7, v5, Vector3f( 0,  0,  1), mat);
+}
 
 void insertItems(World &world) {
-    world.insert(Sphere(Vector3f(2, 5, -4), 3, mat1));
-    world.insert(Sphere(Vector3f(-4, 6, -10), 3, EMERALD));
-    world.insert(Sphere(Vector3f(-7, 5, -40), 15, GOLD));
-    world.insert(Sphere(Vector3f(-10, 4, -5), 4, mat4));
+    // ROOM
+    insertCube(world, 20, -20, 20, -20, 20, -40, ROOM);
+
+    // OBJECTS
+    //world.insert(Sphere(Vector3f(2, 5, -4), 3, mat1));
+    world.insert(Sphere(Vector3f(-1, 6, -6), 3, EMERALD));
+    world.insert(Sphere(Vector3f(-5, 5, -29), 8, GOLD));
+    //world.insert(Sphere(Vector3f(-10, 4, -5), 4, mat4));
+    
+    insertCube(world, 1, 9, -4, 4, -24, -16, EMERALD);
+    //insertQuad(world, Vector3f(0, -3, -10), Vector3f(0, 0, -10), Vector3f(3, 0, -10), Vector3f(3, -3, -10), Vector3f(0, 0, 1), EMERALD);
+    //insertCube(world, 4, 14, -5, 5, -19, -9, EMERALD);
+    //world.insert(Sphere(Vector3f(9, 0, -14), 4, GOLD_IN_EMERALD));
 }
 
 vector< vector<Vector3f> > data;
@@ -253,6 +292,7 @@ Vector3f rayTracer(World &world, Ray ray, int depth) {
             Vector3f refrDir = AngleAxisf(rev * angle, ray.direction.cross(target.normal).normalized()) * ray.direction;
 
             if (depth >= 1 && debug) {
+                cout << "refidx : " << ridx << endl;
                 cout << "nowdir : " << ray.direction.transpose() << endl;
                 cout << "target : " << target.point.transpose() << endl;
                 cout << "normal : " << target.normal.transpose() << endl;
@@ -266,7 +306,6 @@ Vector3f rayTracer(World &world, Ray ray, int depth) {
         return object_color + reflection * reflectivity * alpha + refraction;
     }
     else {
-        if (depth == RAY_TRACE_DEPTH) return Vector3f(0.1, 0.1, 0.1);
         return default_color;
     }
 }
