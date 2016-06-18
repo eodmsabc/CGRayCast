@@ -3,10 +3,6 @@
 #include <cmath>
 #include <string>
 
-#include <GL/gl.h>
-#include <GL/glu.h>
-#include <GL/freeglut.h>
-
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
@@ -23,7 +19,7 @@ bool debug = false;
 const unsigned int WIDTH = 640;
 const float ASPECT = 9.0 / 16.0;
 const unsigned int HEIGHT = WIDTH * ASPECT;
-const unsigned int SIZE = WIDTH * HEIGHT;
+const unsigned int PIXEL_COUNT = WIDTH * HEIGHT;
 const float CAM_HEIGHT = 2.0f;
 const float VPWIDTH = 16.0;
 const float VPHEIGHT = VPWIDTH * ASPECT;
@@ -34,13 +30,19 @@ const float VPDY = VPHEIGHT / (HEIGHT - 1);
 
 Vector3f camloc (0, CAM_HEIGHT, 10);
 
+// DATA
+float data_r[PIXEL_COUNT];
+float data_g[PIXEL_COUNT];
+float data_b[PIXEL_COUNT];
+
+const int RAY_TRACE_DEPTH = 6;
+const float SHADOW_FACTOR = 0.3;
+
 Vector3f pixelRayDirection(int i, int j) {
     return Vector3f(VPMINX + VPWIDTH / (WIDTH - 1) * i, VPMINY + VPHEIGHT / (HEIGHT - 1) * j, 0) - camloc;
 }
 
-// RAY TRACE DEPTH
-const int RAY_TRACE_DEPTH = 6;
-const float SHADOW_FACTOR = 0.3;
+Vector3f rayTracer(World &, Ray, int);
 
 // COLORS
 Vector3f BLACK (0.0, 0.0, 0.0);
@@ -119,101 +121,24 @@ void insertItems(World &world) {
     //world.insert(Sphere(Vector3f(9, 0, -14), 4, GOLD_IN_EMERALD));
 }
 
-vector< vector<Vector3f> > data;
-float pixels[HEIGHT][WIDTH][3];
-
-bool firstTime = true;
-int height_count = 0;
-
-///////////////////////////////////////////////
-World wtest(false);
-
-Vector3f rayTracer(World &, Ray, int);
-
-void keyboard(unsigned char key, int x, int y) {
-    switch (key) {
-        case 27:
-            exit(0);
-            break;
-    }
-}
-
-void mouse(int button, int state, int x, int y) {
-    switch (button) {
-        case GLUT_LEFT_BUTTON:
-            if (state == GLUT_DOWN) {
-                y = HEIGHT - y;
-                debug = true;
-                Vector3f color = rayTracer(wtest, Ray(camloc, pixelRayDirection(x, y), RI_AIR), RAY_TRACE_DEPTH);
-                for (int k = 0; k < 3; k++) {
-                    pixels[y][x][k] = color(k);
-                }
-                debug = false;
-                cout << "Position : " << x << ", " << y << " >>> Color : " << color.transpose() << endl;
-            }
-    }
-    return;
-}
-
-void display() {
-    glClear(GL_COLOR_BUFFER_BIT);
-    if (firstTime) {
-        for (int i = 0; i < WIDTH; i++) {
-            for (int j = 0; j < HEIGHT; j++) {
-                for (int k = 0; k < 3; k++) {
-                    pixels[j][i][k] = 0.0f;
-                }
-            }
-        }
-        firstTime = false;
-    }
-
-    if (height_count < HEIGHT) {
-        for (int i = 0; i < WIDTH; i++) {
-            Vector3f color = rayTracer(wtest, Ray(camloc, pixelRayDirection(i, height_count), RI_AIR), RAY_TRACE_DEPTH);
-            for (int k = 0; k < 3; k++) {
-                pixels[height_count][i][k] = color(k);
-            }
-        }
-        height_count++;
-    }
-    
-    glDrawPixels(WIDTH, HEIGHT, GL_RGB, GL_FLOAT, pixels);
-    glutSwapBuffers();
-}
-
-unsigned timeStep = 20;
-void Timer(int unused) {
-    glutPostRedisplay();
-    glutTimerFunc(timeStep, Timer, 0);
-}
-
 int main(int argc, char* argv[]) {
     World world (false);
     world.insertLight(Vector3f(-4, 11, 3), Vector3f(1, 1, 1));
-    
     insertItems(world);
-    data.clear();
+    
+    bitmap_image image(WIDTH, HEIGHT);
 
-    //////////////////////////// for debug
-    wtest = world;
-    ///////////////////////////
+    for (int j = 0; j < HEIGHT; j++) {
+        for (int i = 0; i < WIDTH; i++) {
+            Vector3f color = rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH);
+            data_r[j * WIDTH + i] = color(0);
+            data_g[j * WIDTH + i] = color(1);
+            data_b[j * WIDTH + i] = color(2);
+        }
+        image.import_rgb(data_r, data_g, data_b);
+        image.save_image("myimage.bmp");
+    }
 
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-
-    glutInitWindowSize(WIDTH, HEIGHT);
-    glutInitWindowPosition(50, 50);
-    glutCreateWindow("Ray Tracing");
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-
-    glutDisplayFunc(display);
-    glutMouseFunc(mouse);
-    glutTimerFunc(timeStep, Timer, 0);
-    glutKeyboardFunc(keyboard);
-
-    glutMainLoop();
     return 0;
 }
 
