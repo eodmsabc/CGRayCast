@@ -29,6 +29,10 @@ void insertQuad(World &world, Eigen::Vector3f v0, Eigen::Vector3f v1, Eigen::Vec
 void insertQuad(World &world, Eigen::Vector3f v0, Eigen::Vector3f v1, Eigen::Vector3f v2, Eigen::Vector3f v3, Eigen::Vector3f normal, Material *mat, bitmap_image *t) {
     float w = t -> width();
     float h = t -> height();
+/*    std::cout << w << ", " << h << std::endl;
+    unsigned char r, g, b;
+    (*t).get_pixel(800, 400, r, g, b);
+    std::cout << (Eigen::Vector3f(r, g, b) / 256.0).transpose() << std::endl;*/
     Eigen::Vector2f t0(0, 0);
     Eigen::Vector2f t1(w - 1, 0);
     Eigen::Vector2f t2(w - 1, h - 1);

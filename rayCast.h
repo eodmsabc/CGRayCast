@@ -34,7 +34,7 @@ public:
     Material *material;
     bitmap_image *texture;
 
-    Triangle();
+    Triangle(){}
     Triangle(std::vector<Eigen::Vector3f>, Eigen::Vector3f, Material*);
     Triangle(std::vector<Eigen::Vector3f>, std::vector<Eigen::Vector2f>, Eigen::Vector3f, Material*, bitmap_image*);
     

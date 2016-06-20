@@ -92,13 +92,11 @@ void insertItems(World &world) {
     world.insert(Sphere(Vector3f(-5, 5, -29), 8, GOLD));
     //world.insert(Sphere(Vector3f(-10, 4, -5), 4, mat4));
     
-    insertCube(world, 1, 9, -4, 4, -24, -16, EMERALD);
+    insertCube(world, 2, 8, -3, 3, -23, -17, EMERALD);
     //insertQuad(world, Vector3f(0, -3, -10), Vector3f(0, 0, -10), Vector3f(3, 0, -10), Vector3f(3, -3, -10), Vector3f(0, 0, 1), EMERALD);
     //insertCube(world, 4, 14, -5, 5, -19, -9, EMERALD);
     //world.insert(Sphere(Vector3f(9, 0, -14), 4, GOLD_IN_EMERALD));
-    insertQuad(world, Vector3f(-25, -10, -40), Vector3f(25, -10, -40), Vector3f(25, -10, 10), Vector3f(-25, -10, 10), Vector3f(0, 1, 0), ROOM, chessboard);
-
-
+    insertQuad(world, Vector3f(-25, -5, -40), Vector3f(25, -5, -40), Vector3f(25, -5, 10), Vector3f(-25, -5, 10), Vector3f(0, 1, 0), ROOM, chessboard);
 }
 
 int main(int argc, char* argv[]) {
@@ -106,6 +104,7 @@ int main(int argc, char* argv[]) {
     world.insertLight(Vector3f(-4, 11, 3));
 
     insertItems(world);
+    cout << world.planeList.size() << endl;
 
     // OUTPUT
     bitmap_image image(WIDTH, HEIGHT);

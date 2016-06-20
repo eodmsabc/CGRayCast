@@ -2,6 +2,7 @@
 #ifndef _PRIMITIVE_H_
 #define _PRIMITIVE_H_
 
+#include <iostream>
 #include <vector>
 #include "rayCast.h"
 #include "material.h"

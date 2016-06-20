@@ -13,8 +13,6 @@ Ray::Ray(Eigen::Vector3f s, Eigen::Vector3f d, float ri) {
     refidx = ri;
 }
 
-Triangle::Triangle() {}
-
 Triangle::Triangle(std::vector<Eigen::Vector3f> v, Eigen::Vector3f n, Material *mat) {
     vertices = v;
     normal = n.normalized();
@@ -49,11 +47,11 @@ Sphere::Sphere(Eigen::Vector3f c, float r, Material *mat) {
     texture = NULL;
 }
 
-Sphere::Sphere(Eigen::Vector3f c, float r, Material *mat, bitmap_image *t) {
+Sphere::Sphere(Eigen::Vector3f c, float r, Material *mat, bitmap_image *texture_image) {
     center = c;
     radius = r;
     material = mat;
-    texture = t;
+    texture = texture_image;
 }
 
 Eigen::Vector2f Sphere::phi_theta_conversion(Eigen::Vector3f) {
@@ -94,8 +92,26 @@ bool World::rayCast(Ray r, float threshold, Target &target) {
         if (isIntersect(planeList[i], r, dist)) {
             if (dist < minDist && dist < threshold) {
                 target.point = r.start + r.direction * dist;
+                Eigen::Vector3f b = planeList[i].barycentric(r.start + r.direction * dist);
                 target.normal = planeList[i].normal;
                 target.material = planeList[i].material;
+                if (planeList[i].texture != NULL) {
+                    Material *m = new Material();
+                    Eigen::Vector2f tcoord(0, 0);
+                    for (int j = 0; j < 3; j++) {
+                        tcoord += planeList[i].vt[j] * b(j);
+                    }
+                    int w = tcoord(0), h = tcoord(1);
+                    unsigned char red, green, blue;
+                    (*(planeList[i].texture)).get_pixel(w, h, red, green, blue);
+                    m -> ambient = Eigen::Vector3f(red, green, blue) * 0.1 / 255;
+                    m -> diffuse = Eigen::Vector3f(red, green, blue) * 0.6 / 255;
+                    m -> specular = Eigen::Vector3f(0.3, 0.3, 0.3);
+                    m -> shininess = 40;
+                    m -> reflectivity = 0.3;
+                    m -> alpha = 1;
+                    target.material = m;
+                }
                 minDist = dist;
             }
         }
