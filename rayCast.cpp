@@ -19,6 +19,7 @@ Triangle::Triangle(std::vector<Eigen::Vector3f> v, Eigen::Vector3f n, Material *
     vertices = v;
     normal = n.normalized();
     material = mat;
+    texture = NULL;
 }
 
 Triangle::Triangle(std::vector<Eigen::Vector3f> v, std::vector<Eigen::Vector2f> t, Eigen::Vector3f n, Material *mat, bitmap_image *texture_image) {
@@ -45,7 +46,20 @@ Sphere::Sphere(Eigen::Vector3f c, float r, Material *mat) {
     center = c;
     radius = r;
     material = mat;
+    texture = NULL;
 }
+
+Sphere::Sphere(Eigen::Vector3f c, float r, Material *mat, bitmap_image *t) {
+    center = c;
+    radius = r;
+    material = mat;
+    texture = t;
+}
+
+Eigen::Vector2f Sphere::phi_theta_conversion(Eigen::Vector3f) {
+    return Eigen::Vector2f(0, 0);
+}
+
 /*
 Light::Light(Eigen::Vector3f p, Eigen::Vector3f c) {
     position = p;

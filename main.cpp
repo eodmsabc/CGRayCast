@@ -78,9 +78,13 @@ RI_RUBY);
 Material *GOLD = new Material(0.24725, 0.1995, 0.0745, 0.75164, 0.60648, 0.22648, 0.628281, 0.555802, 0.366065, 0.4, 0.0, 1.0, RI_AIR, RI_AIR);
 Material *GOLD_IN_EMERALD = new Material(0.24725, 0.1995, 0.0745, 0.75164, 0.60648, 0.22648, 0.628281, 0.555802, 0.366065, 0.4, 0.0, 1.0, RI_EMERALD, RI_AIR);
 
+// TEXTURE IMAGES
+bitmap_image *chessboard = new bitmap_image("textures/chessboard.bmp");
+
+
 void insertItems(World &world) {
     // ROOM
-    insertCube(world, 20, -20, 20, -20, 20, -40, ROOM);
+    insertCube(world, 25, -25, 25, -25, 10, -40, ROOM);
 
     // OBJECTS
     //world.insert(Sphere(Vector3f(2, 5, -4), 3, mat1));
@@ -92,15 +96,19 @@ void insertItems(World &world) {
     //insertQuad(world, Vector3f(0, -3, -10), Vector3f(0, 0, -10), Vector3f(3, 0, -10), Vector3f(3, -3, -10), Vector3f(0, 0, 1), EMERALD);
     //insertCube(world, 4, 14, -5, 5, -19, -9, EMERALD);
     //world.insert(Sphere(Vector3f(9, 0, -14), 4, GOLD_IN_EMERALD));
+    insertQuad(world, Vector3f(-25, -10, -40), Vector3f(25, -10, -40), Vector3f(25, -10, 10), Vector3f(-25, -10, 10), Vector3f(0, 1, 0), ROOM, chessboard);
+
+
 }
 
 int main(int argc, char* argv[]) {
     World world;
     world.insertLight(Vector3f(-4, 11, 3));
-    insertItems(world);
-    
-    bitmap_image image(WIDTH, HEIGHT);
 
+    insertItems(world);
+
+    // OUTPUT
+    bitmap_image image(WIDTH, HEIGHT);
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
             Vector3f color = rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH);
