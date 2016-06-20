@@ -5,7 +5,7 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "material.h"
 
 #define INF 100000
@@ -25,23 +25,17 @@ struct Target {
     Material *material;
 };
 
-class Plane {
+class Triangle {
 public:
     std::vector<Eigen::Vector3f> vertices;
+    std::vector<Eigen::Vector2f> texture;
     Eigen::Vector3f normal;
     Material *material;
-    Plane();
-    Plane(std::vector<Eigen::Vector3f>, Eigen::Vector3f, Material*);
-};
-
-class PNode {
-public:
-    Plane plane;
-    PNode *left;
-    PNode *right;
-
-    PNode(Plane);
-    PNode(Plane, PNode*, PNode*);
+    Triangle();
+    Triangle(std::vector<Eigen::Vector3f>, Eigen::Vector3f, Material*);
+    Triangle(std::vector<Eigen::Vector3f>, std::vector<Eigen::Vector2f>, Eigen::Vector3f, Material*);
+    
+    Eigen::Vector3f barycentric(Eigen::Vector3f);
 };
 
 class Sphere {
@@ -52,39 +46,34 @@ public:
     Sphere(Eigen::Vector3f, float, Material*);
 };
 
+/*
 struct Light {
     Eigen::Vector3f position;
     Eigen::Vector3f color;
     Light();
     Light(Eigen::Vector3f, Eigen::Vector3f);
 };
+*/
 
 class World {
 public:
-    PNode *bsproot;
-    std::vector<Plane> planeList;
+    std::vector<Triangle> planeList;
     std::vector<Sphere> sphereList;
-    bool bspTrigger;
-    std::vector<Light> pointLights;
+    std::vector<Eigen::Vector3f> pointLights;
 
-    World(bool);
-    void insertLight(Light);
-    void insertLight(Eigen::Vector3f, Eigen::Vector3f);
-    void insert(Plane);
+    World();
+    void insertLight(float, float, float);
+    void insertLight(Eigen::Vector3f);
+    void insert(Triangle);
     void insert(Sphere);
     
     // Ray Cast
     bool rayCast(Ray, float, Target &);
     bool rayCast(Ray, float);
-
-private:
-    // Binary Space Partitioning
-    void insertBSP(Plane, PNode*);
-    void split(Eigen::Vector3f, float, std::vector<Eigen::Vector3f>&, std::vector<Eigen::Vector3f>&);
 };
 
 bool sameSideWithCenter(Eigen::Vector3f, Eigen::Vector3f, Eigen::Vector3f, Eigen::Vector3f);
-bool isIntersect(Plane, Ray, float &);
+bool isIntersect(Triangle, Ray, float &);
 bool isIntersect(Sphere, Ray, float &);
 
 #endif

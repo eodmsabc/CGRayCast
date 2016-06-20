@@ -3,8 +3,8 @@
 #include <cmath>
 #include <string>
 
-#include <eigen3/Eigen/Dense>
-#include <eigen3/Eigen/Geometry>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 #include "material.h"
 #include "rayCast.h"
@@ -85,7 +85,7 @@ void insertQuad(World &world, Vector3f v1, Vector3f v2, Vector3f v3, Vector3f v4
     vertices.push_back(v2);
     vertices.push_back(v3);
     vertices.push_back(v4);
-    world.insert(Plane(vertices, normal, mat));
+    world.insert(Triangle(vertices, normal, mat));
 }
 
 void insertCube(World &world, float x1, float x2, float y1, float y2, float z1, float z2, Material *mat) {
@@ -122,8 +122,8 @@ void insertItems(World &world) {
 }
 
 int main(int argc, char* argv[]) {
-    World world (false);
-    world.insertLight(Vector3f(-4, 11, 3), Vector3f(1, 1, 1));
+    World world;
+    world.insertLight(Vector3f(-4, 11, 3));
     insertItems(world);
     
     bitmap_image image(WIDTH, HEIGHT);
@@ -151,8 +151,7 @@ Vector3f localIllumination(Vector3f point, Vector3f normal, Vector3f raydir, Mat
     int size = world.pointLights.size();
     Vector3f color = Vector3f(0, 0, 0);
     for (int i = 0; i < size; i++) {
-        Vector3f lightpos = world.pointLights[i].position;
-        Vector3f lightcolor = world.pointLights[i].color;
+        Vector3f lightpos = world.pointLights[i];
 
         // ambient
         color += mat -> ambient;
@@ -163,13 +162,13 @@ Vector3f localIllumination(Vector3f point, Vector3f normal, Vector3f raydir, Mat
         if (difFactor < 0) difFactor *= mat -> alpha - 1;
         float shadow = 1;
         if (world.rayCast(Ray(point, lightvec), lightvec.norm())) shadow = SHADOW_FACTOR;
-        color += (mat -> diffuse).cwiseProduct(lightcolor) * difFactor * shadow;
+        color += (mat -> diffuse) * difFactor * shadow;
 
         // Specular
         Vector3f lightout = reflectDirection(-lightvec.normalized(), normal);
         float speFactor_sub = lightout.dot(-raydir);
         float speFactor = (speFactor_sub < 0)? 0 : pow(speFactor_sub, mat -> shininess);
-        color += (mat -> specular).cwiseProduct(lightcolor) * speFactor * shadow;
+        color += (mat -> specular) * speFactor * shadow;
     }
     return color;
 }

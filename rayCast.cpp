@@ -13,22 +13,23 @@ Ray::Ray(Eigen::Vector3f s, Eigen::Vector3f d, float ri) {
     refidx = ri;
 }
 
-Plane::Plane() {}
+Triangle::Triangle() {}
 
-Plane::Plane(std::vector<Eigen::Vector3f> v, Eigen::Vector3f n, Material *mat) {
+Triangle::Triangle(std::vector<Eigen::Vector3f> v, Eigen::Vector3f n, Material *mat) {
     vertices = v;
     normal = n.normalized();
     material = mat;
 }
 
-PNode::PNode(Plane p, PNode *l, PNode *r) {
-    plane = p;
-    left = l;
-    right = r;
+Triangle::Triangle(std::vector<Eigen::Vector3f> v, std::vector<Eigen::Vector2f> t, Eigen::Vector3f n, Material *mat) {
+    vertices = v;
+    texture = t;
+    normal = n.normalized();
+    material = mat;
 }
 
-PNode::PNode(Plane p) {
-    PNode(p, NULL, NULL);
+Eigen::Vector3f Triangle::barycentric(Eigen::Vector3f p) {
+    return Eigen::Vector3f(0, 0, 0);
 }
 
 Sphere::Sphere(Eigen::Vector3f c, float r, Material *mat) {
@@ -36,68 +37,47 @@ Sphere::Sphere(Eigen::Vector3f c, float r, Material *mat) {
     radius = r;
     material = mat;
 }
-
+/*
 Light::Light(Eigen::Vector3f p, Eigen::Vector3f c) {
     position = p;
     color = c;
 }
+*/
+World::World() {}
 
-World::World(bool bt) {
-    bspTrigger = bt;
+void World::insertLight(float x, float y, float z) {
+    pointLights.push_back(Eigen::Vector3f(x, y, z));
 }
 
-void World::insertLight(Light l) {
+void World::insertLight(Eigen::Vector3f l) {
     pointLights.push_back(l);
 }
 
-void World::insertLight(Eigen::Vector3f p, Eigen::Vector3f c) {
-    pointLights.push_back(Light(p, c));
-}
-
-void World::insert(Plane p) {
-    if (bspTrigger) {
-        insertBSP(p, bsproot);
-    }
-    else {
+void World::insert(Triangle p) {
         planeList.push_back(p);
-    }
 }
 
 void World::insert(Sphere s) {
     sphereList.push_back(s);
 }
 
-// Binary Space Partitioning
-void World::insertBSP(Plane p, PNode *node) {
-    // TODO
-}
-
-void World::split(Eigen::Vector3f norm, float d, std::vector<Eigen::Vector3f> &left, std::vector<Eigen::Vector3f> &right) {
-    // TODO
-}
-
 // Ray Cast
 bool World::rayCast(Ray r, float threshold, Target &target) {
     float minDist = INF;
 
-    if (bspTrigger) {
-        //
-    }
-    else {
-        int planeNum = planeList.size();
-        for (int i = 0; i < planeNum; i++) {
-            float dist;
-            if (isIntersect(planeList[i], r, dist)) {
-                if (dist < minDist && dist < threshold) {
-                    target.point = r.start + r.direction * dist;
-                    target.normal = planeList[i].normal;
-                    target.material = planeList[i].material;
-                    minDist = dist;
-                }
+    int planeNum = planeList.size();
+    for (int i = 0; i < planeNum; i++) {
+        float dist;
+        if (isIntersect(planeList[i], r, dist)) {
+            if (dist < minDist && dist < threshold) {
+                target.point = r.start + r.direction * dist;
+                target.normal = planeList[i].normal;
+                target.material = planeList[i].material;
+                minDist = dist;
             }
         }
     }
-
+    
     int sphereNum = sphereList.size();
     for (int i = 0; i < sphereNum; i++) {
         float dist;
@@ -131,9 +111,8 @@ bool sameSideWithCenter(Eigen::Vector3f a, Eigen::Vector3f b, Eigen::Vector3f c,
 }
 
 // Intersection
-bool isIntersect(Plane p, Ray r, float &dist) {
-    float d = p.normal.dot(p.vertices[0]);
-    dist = (d - r.start.dot(p.normal)) / r.direction.dot(p.normal);
+bool isIntersect(Triangle p, Ray r, float &dist) {
+    dist = p.normal.dot(p.vertices[0] - r.start) / p.normal.dot(r.direction);
     if (dist < 0.0001) return false;
 
     Eigen::Vector3f center(0, 0, 0);

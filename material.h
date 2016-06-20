@@ -2,7 +2,7 @@
 #ifndef _MATERIAL_H_
 #define _MATERIAL_H_
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 class Material {
 public:
