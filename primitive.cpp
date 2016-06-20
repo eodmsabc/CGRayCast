@@ -1,44 +1,51 @@
 
 #include "primitive.h"
 
-void insertTriangle(World &world, Eigen::Vector3f v0, Eigen::Vector3f v1, Eigen::Vector3f v2, Eigen::Vector3f normal, Material *mat) {
-    std::vector<Eigen::Vector3f> vertices;
-    vertices.push_back(v0);
-    vertices.push_back(v1);
-    vertices.push_back(v2);
-    world.insert(Triangle(vertices, normal, mat));
+inline void insertTriangle(World &world, std::vector<Eigen::Vector3f> v, Eigen::Vector3f normal, Material *mat) {
+    world.insert(Triangle(v, normal, mat));
 }
 
-void insertTriangle(World &world, Eigen::Vector3f v0, Eigen::Vector3f v1, Eigen::Vector3f v2, Eigen::Vector3f normal, Material *mat, bitmap_image *t, Eigen::Vector2f t0, Eigen::Vector2f t1, Eigen::Vector2f t2) {
-    std::vector<Eigen::Vector3f> vertices;
-    std::vector<Eigen::Vector2f> texture;
-    vertices.push_back(v0);
-    vertices.push_back(v1);
-    vertices.push_back(v2);
-    texture.push_back(t0);
-    texture.push_back(t1);
-    texture.push_back(t2);
-    world.insert(Triangle(vertices, texture, normal, mat, t));
+inline void insertTriangle(World &world, std::vector<Eigen::Vector3f> v, std::vector<Eigen::Vector3f> vn, Eigen::Vector3f normal, Material *mat) {
+    world.insert(Triangle(v, vn, normal, mat));
+}
+
+inline void insertTriangle(World &world, std::vector<Eigen::Vector3f> v, std::vector<Eigen::Vector3f> vn, std::vector<Eigen::Vector2f> vt, Eigen::Vector3f normal, Material *mat) {
+    world.insert(Triangle(v, vn, vt, normal, mat));
 }
 
 void insertQuad(World &world, Eigen::Vector3f v0, Eigen::Vector3f v1, Eigen::Vector3f v2, Eigen::Vector3f v3, Eigen::Vector3f normal, Material *mat) {
-    insertTriangle(world, v0, v1, v2, normal, mat);
-    insertTriangle(world, v0, v2, v3, normal, mat);
-}
-
-void insertQuad(World &world, Eigen::Vector3f v0, Eigen::Vector3f v1, Eigen::Vector3f v2, Eigen::Vector3f v3, Eigen::Vector3f normal, Material *mat, bitmap_image *t) {
-    float w = t -> width();
-    float h = t -> height();
-/*    std::cout << w << ", " << h << std::endl;
-    unsigned char r, g, b;
-    (*t).get_pixel(800, 400, r, g, b);
-    std::cout << (Eigen::Vector3f(r, g, b) / 256.0).transpose() << std::endl;*/
-    Eigen::Vector2f t0(0, 0);
-    Eigen::Vector2f t1(w - 1, 0);
-    Eigen::Vector2f t2(w - 1, h - 1);
-    Eigen::Vector2f t3(0, h - 1);
-    insertTriangle(world, v0, v1, v2, normal, mat, t, t0, t1, t2);
-    insertTriangle(world, v0, v2, v3, normal, mat, t, t0, t2, t3);
+    std::vector<Eigen::Vector3f> vertices1;
+    vertices1.push_back(v0);
+    vertices1.push_back(v1);
+    vertices1.push_back(v2);
+    std::vector<Eigen::Vector3f> vertices2;
+    vertices2.push_back(v0);
+    vertices2.push_back(v2);
+    vertices2.push_back(v3);
+    if (mat -> texture == NULL) {
+        insertTriangle(world, vertices1, normal, mat);
+        insertTriangle(world, vertices2, normal, mat);
+    }
+    else {
+        float w = mat -> texture -> width();
+        float h = mat -> texture -> height();
+        Eigen::Vector2f t0(0, h - 1);
+        Eigen::Vector2f t1(w - 1, h - 1);
+        Eigen::Vector2f t2(w - 1, 0);
+        Eigen::Vector2f t3(0, 0);
+        std::vector<Eigen::Vector3f> vn;
+        for (int i = 0; i < 3; i ++) vn.push_back(normal);
+        std::vector<Eigen::Vector2f> vt1;
+        vt1.push_back(t0);
+        vt1.push_back(t1);
+        vt1.push_back(t2);
+        std::vector<Eigen::Vector2f> vt2;
+        vt2.push_back(t0);
+        vt2.push_back(t2);
+        vt2.push_back(t3);
+        insertTriangle(world, vertices1, vn, vt1, normal, mat);
+        insertTriangle(world, vertices2, vn, vt2, normal, mat);
+    }
 }
 
 void insertCube(World &world, float x1, float x2, float y1, float y2, float z1, float z2, Material *mat) {

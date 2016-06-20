@@ -1,7 +1,7 @@
 all: main
 
 main: main.o rayCast.o material.o primitive.o
-	g++ -o main main.o rayCast.o material.o primitive.o -lm -lGL -lGLU -lglut -O3
+	g++ -o main main.o rayCast.o material.o primitive.o -O3
 
 main.o: main.cpp
 	g++ -c main.cpp -O3

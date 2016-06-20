@@ -15,17 +15,24 @@ Ray::Ray(Eigen::Vector3f s, Eigen::Vector3f d, float ri) {
 
 Triangle::Triangle(std::vector<Eigen::Vector3f> v, Eigen::Vector3f n, Material *mat) {
     vertices = v;
-    normal = n.normalized();
+    for (int i = 0; i < 3; i++) vn.push_back(n);
+    normal = n;
     material = mat;
-    texture = NULL;
 }
 
-Triangle::Triangle(std::vector<Eigen::Vector3f> v, std::vector<Eigen::Vector2f> t, Eigen::Vector3f n, Material *mat, bitmap_image *texture_image) {
+Triangle::Triangle(std::vector<Eigen::Vector3f> v, std::vector<Eigen::Vector3f> vvn, Eigen::Vector3f n, Material *mat) {
     vertices = v;
-    vt = t;
-    normal = n.normalized();
+    vn = vvn;
+    normal = n;
     material = mat;
-    texture = texture_image;
+}
+
+Triangle::Triangle(std::vector<Eigen::Vector3f> v, std::vector<Eigen::Vector3f> vvn, std::vector<Eigen::Vector2f> tx, Eigen::Vector3f n, Material *mat) {
+    vertices = v;
+    vn = vvn;
+    vt = tx;
+    normal = n;
+    material = mat;
 }
 
 Eigen::Vector3f Triangle::barycentric(Eigen::Vector3f p) {
@@ -54,16 +61,14 @@ Sphere::Sphere(Eigen::Vector3f c, float r, Material *mat, bitmap_image *texture_
     texture = texture_image;
 }
 
-Eigen::Vector2f Sphere::phi_theta_conversion(Eigen::Vector3f) {
-    return Eigen::Vector2f(0, 0);
+Eigen::Vector2f Sphere::theta_phi_conversion(Eigen::Vector3f p) {
+    Eigen::Vector3f v = p - center;
+    float phi = acos(v(1) / radius);
+    v(1) = 0;
+    float theta = 0;
+    return Eigen::Vector2f(theta, phi);
 }
 
-/*
-Light::Light(Eigen::Vector3f p, Eigen::Vector3f c) {
-    position = p;
-    color = c;
-}
-*/
 World::World() {}
 
 void World::insertLight(float x, float y, float z) {
@@ -93,17 +98,21 @@ bool World::rayCast(Ray r, float threshold, Target &target) {
             if (dist < minDist && dist < threshold) {
                 target.point = r.start + r.direction * dist;
                 Eigen::Vector3f b = planeList[i].barycentric(r.start + r.direction * dist);
-                target.normal = planeList[i].normal;
+                Eigen::Vector3f normal_base(0, 0, 0);
+                for(int j = 0; j < 3; j++) {
+                    normal_base += planeList[i].vn[j] * b(j);
+                }
+                target.normal = normal_base.normalized();
                 target.material = planeList[i].material;
-                if (planeList[i].texture != NULL) {
-                    Material *m = new Material();
+                if (planeList[i].material -> texture != NULL) {
+                    Material *m = planeList[i].material;
                     Eigen::Vector2f tcoord(0, 0);
                     for (int j = 0; j < 3; j++) {
                         tcoord += planeList[i].vt[j] * b(j);
                     }
                     int w = tcoord(0), h = tcoord(1);
                     unsigned char red, green, blue;
-                    (*(planeList[i].texture)).get_pixel(w, h, red, green, blue);
+                    (*(m -> texture)).get_pixel(w, h, red, green, blue);
                     m -> ambient = Eigen::Vector3f(red, green, blue) * 0.1 / 255;
                     m -> diffuse = Eigen::Vector3f(red, green, blue) * 0.6 / 255;
                     m -> specular = Eigen::Vector3f(0.3, 0.3, 0.3);
@@ -125,6 +134,11 @@ bool World::rayCast(Ray r, float threshold, Target &target) {
                 target.point = r.start + r.direction * dist;
                 target.normal = (target.point - sphereList[i].center).normalized();
                 target.material = sphereList[i].material;
+                if (sphereList[i].material -> texture != NULL) {
+                    Material *m = sphereList[i].material;
+                    int w = m -> texture -> width();
+                    int h = m -> texture -> height();
+                }
                 minDist = dist;
             }
         }

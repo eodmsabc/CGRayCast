@@ -29,14 +29,15 @@ struct Target {
 class Triangle {
 public:
     std::vector<Eigen::Vector3f> vertices;
+    std::vector<Eigen::Vector3f> vn;
     std::vector<Eigen::Vector2f> vt;
     Eigen::Vector3f normal;
     Material *material;
-    bitmap_image *texture;
 
     Triangle(){}
     Triangle(std::vector<Eigen::Vector3f>, Eigen::Vector3f, Material*);
-    Triangle(std::vector<Eigen::Vector3f>, std::vector<Eigen::Vector2f>, Eigen::Vector3f, Material*, bitmap_image*);
+    Triangle(std::vector<Eigen::Vector3f>, std::vector<Eigen::Vector3f>, Eigen::Vector3f, Material*);
+    Triangle(std::vector<Eigen::Vector3f>, std::vector<Eigen::Vector3f>, std::vector<Eigen::Vector2f>, Eigen::Vector3f, Material*);
     
     Eigen::Vector3f barycentric(Eigen::Vector3f);
 };
@@ -50,17 +51,8 @@ public:
     Sphere(Eigen::Vector3f, float, Material*);
     Sphere(Eigen::Vector3f, float, Material*, bitmap_image*);
 
-    Eigen::Vector2f phi_theta_conversion(Eigen::Vector3f);
+    Eigen::Vector2f theta_phi_conversion(Eigen::Vector3f);
 };
-
-/*
-struct Light {
-    Eigen::Vector3f position;
-    Eigen::Vector3f color;
-    Light();
-    Light(Eigen::Vector3f, Eigen::Vector3f);
-};
-*/
 
 class World {
 public:

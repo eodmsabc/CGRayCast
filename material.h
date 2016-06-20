@@ -3,6 +3,7 @@
 #define _MATERIAL_H_
 
 #include <Eigen/Dense>
+#include "bitmap_image.hpp"
 
 class Material {
 public:
@@ -14,9 +15,15 @@ public:
     float alpha;
     float refidx_p;
     float refidx_n;
+
+    float texture_d;
+    float texture_s;
+    bitmap_image *texture;
+
     Material(){}
     Material(Eigen::Vector3f, Eigen::Vector3f, Eigen::Vector3f, float, float, float, float, float);
     Material(float, float, float, float, float, float, float, float, float, float, float, float, float, float);
+    Material(float, float, float, float, float, float, float, bitmap_image*);
 };
 
 #endif
