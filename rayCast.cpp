@@ -21,15 +21,24 @@ Triangle::Triangle(std::vector<Eigen::Vector3f> v, Eigen::Vector3f n, Material *
     material = mat;
 }
 
-Triangle::Triangle(std::vector<Eigen::Vector3f> v, std::vector<Eigen::Vector2f> t, Eigen::Vector3f n, Material *mat) {
+Triangle::Triangle(std::vector<Eigen::Vector3f> v, std::vector<Eigen::Vector2f> t, Eigen::Vector3f n, Material *mat, bitmap_image *texture_image) {
     vertices = v;
-    texture = t;
+    vt = t;
     normal = n.normalized();
     material = mat;
+    texture = texture_image;
 }
 
 Eigen::Vector3f Triangle::barycentric(Eigen::Vector3f p) {
-    return Eigen::Vector3f(0, 0, 0);
+    Eigen::Vector3f u = vertices[1] - vertices[0];
+    Eigen::Vector3f v = vertices[2] - vertices[0];
+    Eigen::Vector3f w = p - vertices[0];
+    float temp = u.dot(v);
+    float uu = u.dot(u);
+    float vv = v.dot(v);
+    float s = (temp * w.dot(v) - vv * w.dot(u)) / (temp * temp - uu * vv);
+    float t = (temp * w.dot(u) - uu * w.dot(v)) / (temp * temp - uu * vv);
+    return Eigen::Vector3f(1 - s - t, s, t);
 }
 
 Sphere::Sphere(Eigen::Vector3f c, float r, Material *mat) {
@@ -115,6 +124,7 @@ bool isIntersect(Triangle p, Ray r, float &dist) {
     dist = p.normal.dot(p.vertices[0] - r.start) / p.normal.dot(r.direction);
     if (dist < 0.0001) return false;
 
+    /*
     Eigen::Vector3f center(0, 0, 0);
     int size = p.vertices.size();
     for (int i = 0; i < size; i++) {
@@ -123,6 +133,11 @@ bool isIntersect(Triangle p, Ray r, float &dist) {
     center /= size;
     for (int i = 0; i < size; i++) {
         if (!sameSideWithCenter(p.vertices[i], p.vertices[(i+1)%size], center, r.start + r.direction * dist)) return false;
+    }
+    */
+    Eigen::Vector3f b = p.barycentric(r.start + r.direction * dist);
+    for (int i = 0; i < 3; i++) {
+        if (b(i) < 0) return false;
     }
     return true;
 }

@@ -7,6 +7,7 @@
 #include <vector>
 #include <Eigen/Dense>
 #include "material.h"
+#include "bitmap_image.hpp"
 
 #define INF 100000
 
@@ -28,12 +29,14 @@ struct Target {
 class Triangle {
 public:
     std::vector<Eigen::Vector3f> vertices;
-    std::vector<Eigen::Vector2f> texture;
+    std::vector<Eigen::Vector2f> vt;
     Eigen::Vector3f normal;
     Material *material;
+    bitmap_image *texture;
+
     Triangle();
     Triangle(std::vector<Eigen::Vector3f>, Eigen::Vector3f, Material*);
-    Triangle(std::vector<Eigen::Vector3f>, std::vector<Eigen::Vector2f>, Eigen::Vector3f, Material*);
+    Triangle(std::vector<Eigen::Vector3f>, std::vector<Eigen::Vector2f>, Eigen::Vector3f, Material*, bitmap_image*);
     
     Eigen::Vector3f barycentric(Eigen::Vector3f);
 };

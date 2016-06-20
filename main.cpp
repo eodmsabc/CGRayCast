@@ -8,6 +8,7 @@
 
 #include "material.h"
 #include "rayCast.h"
+#include "primitive.h"
 #include "bitmap_image.hpp"
 
 using namespace std;
@@ -76,34 +77,6 @@ Material *RUBY = new Material(0.1745, 0.01175, 0.01175, 0.61424, 0.04136, 0.0413
 RI_RUBY);
 Material *GOLD = new Material(0.24725, 0.1995, 0.0745, 0.75164, 0.60648, 0.22648, 0.628281, 0.555802, 0.366065, 0.4, 0.0, 1.0, RI_AIR, RI_AIR);
 Material *GOLD_IN_EMERALD = new Material(0.24725, 0.1995, 0.0745, 0.75164, 0.60648, 0.22648, 0.628281, 0.555802, 0.366065, 0.4, 0.0, 1.0, RI_EMERALD, RI_AIR);
-
-
-// Draw Primitive Item
-void insertQuad(World &world, Vector3f v1, Vector3f v2, Vector3f v3, Vector3f v4, Vector3f normal, Material *mat) {
-    vector<Vector3f> vertices;
-    vertices.push_back(v1);
-    vertices.push_back(v2);
-    vertices.push_back(v3);
-    vertices.push_back(v4);
-    world.insert(Triangle(vertices, normal, mat));
-}
-
-void insertCube(World &world, float x1, float x2, float y1, float y2, float z1, float z2, Material *mat) {
-    Vector3f v0(x1, y1, z1);
-    Vector3f v1(x1, y1, z2);
-    Vector3f v2(x1, y2, z1);
-    Vector3f v3(x1, y2, z2);
-    Vector3f v4(x2, y1, z1);
-    Vector3f v5(x2, y1, z2);
-    Vector3f v6(x2, y2, z1);
-    Vector3f v7(x2, y2, z2);
-    insertQuad(world, v0, v1, v3, v2, Vector3f(-1,  0,  0), mat);
-    insertQuad(world, v4, v5, v7, v6, Vector3f( 1,  0,  0), mat);
-    insertQuad(world, v0, v1, v5, v4, Vector3f( 0, -1,  0), mat);
-    insertQuad(world, v2, v3, v7, v6, Vector3f( 0,  1,  0), mat);
-    insertQuad(world, v0, v2, v6, v4, Vector3f( 0,  0, -1), mat);
-    insertQuad(world, v1, v3, v7, v5, Vector3f( 0,  0,  1), mat);
-}
 
 void insertItems(World &world) {
     // ROOM
