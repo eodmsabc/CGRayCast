@@ -16,6 +16,7 @@ public:
     float refidx_p;
     float refidx_n;
 
+    float texture_a;
     float texture_d;
     float texture_s;
     bitmap_image *texture;
@@ -23,7 +24,7 @@ public:
     Material(){}
     Material(Eigen::Vector3f, Eigen::Vector3f, Eigen::Vector3f, float, float, float, float, float);
     Material(float, float, float, float, float, float, float, float, float, float, float, float, float, float);
-    Material(float, float, float, float, float, float, float, bitmap_image*);
+    Material(float, float, float, float, float, float, float, float, bitmap_image*);
 };
 
 #endif

@@ -47,9 +47,7 @@ public:
     Eigen::Vector3f center;
     float radius;
     Material *material;
-    bitmap_image *texture;
     Sphere(Eigen::Vector3f, float, Material*);
-    Sphere(Eigen::Vector3f, float, Material*, bitmap_image*);
 
     Eigen::Vector2f theta_phi_conversion(Eigen::Vector3f);
 };

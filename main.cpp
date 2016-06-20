@@ -67,17 +67,16 @@ float RI_EMERALD = 1.58;
 float RI_RUBY = 1.76;
 
 // MATERIALS
-Material *mat1 = new Material(MAGENTA * 0.1, MAGENTA * 0.5, MAGENTA * 0.4,  2, 0.0,  0.2, RI_AIR, RI_GLASS);
-Material *mat2 = new Material(CYAN * 0.1, CYAN * 0.5, CYAN * 0.4,  2, 0.2,  1.0, RI_AIR, RI_GLASS);
-Material *mat3 = new Material(YELLOW * 0.1, YELLOW * 0.5, YELLOW * 0.4,  2, 0.0,  1, RI_AIR, RI_GLASS);
-Material *mat4 = new Material(BLUE * 0.1, BLUE* 0.5, BLUE * 0.4,  2, 0.1,  1.0, RI_AIR, RI_GLASS);
-Material *ROOM = new Material(0.1, 0.1, 0.1, 0.6, 0.6, 0.6, 0.3, 0.3, 0.3, 0.5, 0.0, 1.0, RI_AIR, RI_AIR);
+Material *ROOM = new Material(0.1, 0.1, 0.1, 0.6, 0.6, 0.6, 0.3, 0.3, 0.3, 0.5, 0.7, 1.0, RI_AIR, RI_AIR);
 Material *EMERALD = new Material(0.0215, 0.1745, 0.0215, 0.07568, 0.61424, 0.07568, 0.633, 0.727811, 0.633, 0.6, 0.3, 0.2, RI_AIR, RI_GLASS);
 Material *RUBY = new Material(0.1745, 0.01175, 0.01175, 0.61424, 0.04136, 0.04136, 0.727811, 0.626959, 0.626959, 0.6, 0.2, 0.5, RI_AIR, 
 RI_RUBY);
 Material *GOLD = new Material(0.24725, 0.1995, 0.0745, 0.75164, 0.60648, 0.22648, 0.628281, 0.555802, 0.366065, 0.4, 0.0, 1.0, RI_AIR, RI_AIR);
 Material *GOLD_IN_EMERALD = new Material(0.24725, 0.1995, 0.0745, 0.75164, 0.60648, 0.22648, 0.628281, 0.555802, 0.366065, 0.4, 0.0, 1.0, RI_EMERALD, RI_AIR);
-Material *CHESSBOARD = new Material(0.6, 0.3, 0.6, 0.2, 1.0, 1.0, 1.0, new bitmap_image("textures/chessboard.bmp"));
+Material *GLASS = new Material(0, 0, 0, 0, 0, 0, 0.1, 0.1, 0.1, 0.4, 0.0, 0.0, RI_AIR, 0.9);
+Material *CHESSBOARD = new Material(0.1, 0.6, 0.3, 0.6, 0.2, 1.0, 1.0, 1.0, new bitmap_image("textures/chessboard.bmp"));
+Material *WORLDMAP = new Material(0.2, 0.7, 0.1, 0.6, 0.1, 1.0, 1.0, 1.0, new bitmap_image("textures/worldmap.bmp"));
+Material *TEXT = new Material(0.1, 0.6, 0.3, 0.6, 0.2, 1.0, 1.0, 1.0, new bitmap_image("textures/text.bmp"));
 
 // TEXTURE IMAGES
 //bitmap_image *chessboard = new bitmap_image("textures/chessboard.bmp");
@@ -88,21 +87,23 @@ void insertItems(World &world) {
     insertCube(world, 25, -25, 25, -25, 10, -40, ROOM);
 
     // OBJECTS
-    //world.insert(Sphere(Vector3f(2, 5, -4), 3, mat1));
-    world.insert(Sphere(Vector3f(1, 6, -7), 3, EMERALD));
-    world.insert(Sphere(Vector3f(-5, 5, -29), 7, GOLD));
-    //world.insert(Sphere(Vector3f(-10, 4, -5), 4, mat4));
+//    world.insert(Sphere(Vector3f(1, 6, -7), 3, EMERALD));
+//    world.insert(Sphere(Vector3f(-5, 5, -29), 7, GOLD));
+    world.insert(Sphere(Vector3f(0, 2, -15), 7, WORLDMAP));
+//    world.insert(Sphere(Vector3f(2, 2, 0), 4, GLASS));
+
     
-    insertCube(world, 2, 8, -3, 3, -23, -17, EMERALD);
+    insertCube(world, 2, 8, -3, 3, -25, -20, EMERALD);
     //insertQuad(world, Vector3f(0, -3, -10), Vector3f(0, 0, -10), Vector3f(3, 0, -10), Vector3f(3, -3, -10), Vector3f(0, 0, 1), EMERALD);
     //insertCube(world, 4, 14, -5, 5, -19, -9, EMERALD);
     //world.insert(Sphere(Vector3f(9, 0, -14), 4, GOLD_IN_EMERALD));
-    insertQuad(world, Vector3f(-25, -5, -40), Vector3f(25, -5, -40), Vector3f(25, -5, 10), Vector3f(-25, -5, 10), Vector3f(0, 1, 0), CHESSBOARD);
+    insertQuad(world, Vector3f(-25, -6, -40), Vector3f(25, -6, -40), Vector3f(25, -6, 10), Vector3f(-25, -6, 10), Vector3f(0, 1, 0), CHESSBOARD);
 }
 
 int main(int argc, char* argv[]) {
     World world;
     world.insertLight(Vector3f(-4, 15, 3));
+    world.insertLight(Vector3f(8, 0, 5));
 
     insertItems(world);
 

@@ -25,7 +25,8 @@ Material::Material(float ar, float ag, float ab, float dr, float dg, float db, f
     texture = NULL;
 }
 
-Material::Material(float td, float ts, float sh, float refl, float a, float rp, float rn, bitmap_image *image) {
+Material::Material(float ta, float td, float ts, float sh, float refl, float a, float rp, float rn, bitmap_image *image) {
+    texture_a = ta;
     texture_d = td;
     texture_s = ts;
     shininess = sh * 128;
