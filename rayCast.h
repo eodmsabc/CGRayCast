@@ -50,6 +50,7 @@ public:
     Sphere(Eigen::Vector3f, float, Material*);
 
     Eigen::Vector2f theta_phi_conversion(Eigen::Vector3f);
+    Eigen::Vector3f reverse_conversion(Eigen::Vector2f);
 };
 
 class World {

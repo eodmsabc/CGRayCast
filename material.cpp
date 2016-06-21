@@ -35,4 +35,16 @@ Material::Material(float ta, float td, float ts, float sh, float refl, float a, 
     refidx_p = rp;
     refidx_n = rn;
     texture = image;
+    bumpmapped = false;
+}
+
+Material::Material(float ar, float ag, float ab, float dr, float dg, float db, float sr, float sg, float sb, float sh, float refl, bitmap_image *image, bool bp) {
+    ambient = Eigen::Vector3f(ar, ag, ab);
+    diffuse = Eigen::Vector3f(dr, dg, db);
+    specular = Eigen::Vector3f(sr, sg, sb);
+    shininess = sh;
+    reflectivity = refl;
+    alpha = 1.0;
+    texture = image;
+    bumpmapped = bp;
 }

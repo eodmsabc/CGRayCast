@@ -18,7 +18,7 @@ using namespace Eigen;
 bool debug = false;
 
 // PIXEL
-const unsigned int WIDTH = 640;
+const unsigned int WIDTH = 1280;
 const float ASPECT = 9.0 / 16.0;
 const unsigned int HEIGHT = WIDTH * ASPECT;
 const unsigned int PIXEL_COUNT = WIDTH * HEIGHT;
@@ -40,8 +40,9 @@ float data_b[PIXEL_COUNT];
 const int RAY_TRACE_DEPTH = 6;
 const float SHADOW_FACTOR = 0.2;
 bool depth = false;
-bool softshadow = false;
-bool supersampling = false;
+bool softshadow = true;
+int sampling = 3;
+bool supersampling = true;
 
 inline Vector3f pixelRayDirection(float i, float j) {
     return Vector3f(VPMINX + VPWIDTH / (WIDTH - 1) * i, VPMINY + VPHEIGHT / (HEIGHT - 1) * j, 0) - camloc;
@@ -75,12 +76,12 @@ Material *ROOM = new Material(0.1, 0.1, 0.1, 0.6, 0.6, 0.6, 0.3, 0.3, 0.3, 0.5, 
 Material *EMERALD = new Material(0.0215, 0.1745, 0.0215, 0.07568, 0.61424, 0.07568, 0.633, 0.727811, 0.633, 0.6, 0.3, 0.2, RI_AIR, RI_GLASS);
 Material *RUBY = new Material(0.1745, 0.01175, 0.01175, 0.6142, 0.0414, 0.0414, 0.7278, 0.627, 0.627, 0.6, 0.2, 0.5, RI_AIR, RI_RUBY);
 Material *GOLD = new Material(0.24725, 0.1995, 0.0745, 0.75164, 0.60648, 0.22648, 0.62828, 0.5558, 0.366065, 0.4, 0.0, 1.0, RI_AIR, RI_AIR);
-Material *GOLD_IN_EMERALD = new Material(0.24725, 0.2, 0.0745, 0.75, 0.6, 0.22648, 0.62828, 0.556, 0.366, 0.4, 0.0, 1.0, RI_EMERALD, RI_AIR);
+Material *GOLD_IN_GLASS = new Material(0.24725, 0.2, 0.0745, 0.75, 0.6, 0.22648, 0.62828, 0.556, 0.366, 0.4, 0.0, 1.0, RI_GLASS, RI_AIR);
 Material *GLASS = new Material(0, 0, 0, 0, 0, 0, 0.1, 0.1, 0.1, 0.4, 0.0, 0.0, RI_AIR, RI_GLASS);
 Material *MIRROR = new Material(0, 0, 0, 0, 0, 0, 0.1, 0.1, 0.1, 0.4, 1.0, 1.0, RI_AIR, RI_AIR);
 Material *CHESSBOARD = new Material(0.1, 0.8, 0.1, 0.6, 0.0, 1.0, 1.0, 1.0, new bitmap_image("textures/chessboard.bmp"));
-Material *WORLDMAP = new Material(0.6, 0.5, 0.1, 0.6, 0.0, 1.0, 1.0, 1.0, new bitmap_image("textures/worldmap.bmp"));
-//Material *TEXT = new Material(0.1, 0.6, 0.3, 0.6, 0.2, 1.0, 1.0, 1.0, new bitmap_image("textures/text.bmp"));
+Material *WORLDMAP = new Material(0.3, 0.6, 0.1, 0.6, 0.0, 1.0, 1.0, 1.0, new bitmap_image("textures/worldmap.bmp"));
+Material *BUMP = new Material(0.2, 0.1, 0.05, 0.7, 0.5, 0.2, 0.1, 0.1, 0.1, 0.2, 0, new bitmap_image("textures/normalmap.bmp"), true);
 
 // TEXTURE IMAGES
 //bitmap_image *chessboard = new bitmap_image("textures/chessboard.bmp");
@@ -107,20 +108,23 @@ void insertItems(World &world) {
 //    world.insert(Sphere(Vector3f(3, 3, -7), 3, WORLDMAP));
 //    world.insert(Sphere(Vector3f(5, 3, -2), 3, WORLDMAP));
 //    world.insert(Sphere(Vector3f(7, 3, 3), 3, WORLDMAP));
-    world.insert(Sphere(Vector3f(3, 2, -2), 3, GLASS));
+    world.insert(Sphere(Vector3f(7, 2, -7), 3, GLASS));
+    world.insert(Sphere(Vector3f(0, 0, -1), 1, BUMP));
     world.insert(Sphere(Vector3f(-8, 0, -7), 2, MIRROR));
-    
-    insertCube(world, -8, -4, -4, 3, -14, -10, EMERALD);
+//    insertCube(world, 1, 9, -3, 5, -6, 2, GLASS);
+//    world.insert(Sphere(Vector3f(5, 1, -2), 3, BUMP));
+//    insertCube(world, -10, -7, -3, 6, -14, -10, EMERALD);
     insertPyramid(world, Vector3f(-2, 1.9, -2), Vector3f(0, -1.8, 0), Vector3f(0.6, -1.8, -3.5), Vector3f(-3.8, -1.8, -2), RUBY);
     //insertQuad(world, Vector3f(0, -3, -10), Vector3f(0, 0, -10), Vector3f(3, 0, -10), Vector3f(3, -3, -10), Vector3f(0, 0, 1), EMERALD);
     //insertCube(world, 4, 14, -5, 5, -19, -9, EMERALD);
     //world.insert(Sphere(Vector3f(9, 0, -14), 4, GOLD_IN_EMERALD));
-    insertQuad(world, Vector3f(-25, -6, -40), Vector3f(25, -6, -40), Vector3f(25, -6, 10), Vector3f(-25, -6, 10), Vector3f(0, 1, 0), CHESSBOARD);
+    insertQuad(world, Vector3f(0, 1, -5), Vector3f(4, 1, 0), Vector3f(4, -3, 0), Vector3f(0, -3, -5), Vector3f(-5, 0, 4), MIRROR);
+    insertQuad(world, Vector3f(-25, -3, -40), Vector3f(25, -3, -40), Vector3f(25, -3, 10), Vector3f(-25, -3, 10), Vector3f(0, 1, 0), CHESSBOARD);
 }
 
 int main(int argc, char* argv[]) {
     World world;
-    world.insertLight(Vector3f(0, 20, -20));
+    world.insertLight(Vector3f(0, 20, 3));
     //world.insertLight(Vector3f(8, 0, 5));
 
     insertItems(world);
@@ -171,6 +175,7 @@ int main(int argc, char* argv[]) {
             data_b[j * WIDTH + i] = color(2) > 0.9999? 0.99999 : color(2);
         }
         image.import_rgb(data_r, data_g, data_b);
+        cout << (j + 1) * 100.0 / HEIGHT << "%" << endl;
         image.save_image("myimage.bmp");
     }
 
@@ -203,7 +208,6 @@ inline Vector3f localIllumination(Vector3f point, Vector3f normal, Vector3f rayd
         }
         else {
             int lightcount = 0;
-            int sampling = 3;
             float lightsize = 3;
             for (int j = -sampling; j <= sampling; j++) {
                 for (int k = -sampling; k <= sampling; k++) {
@@ -299,6 +303,7 @@ inline void insertTriangle(World &world, vector<Vector3f> v, vector<Vector3f> vn
 }
 
 inline void insertQuad(World &world, Vector3f v0, Vector3f v1, Vector3f v2, Vector3f v3, Vector3f normal, Material *mat) {
+    normal.normalize();
     vector<Vector3f> vertices1;
     vertices1.push_back(v0);
     vertices1.push_back(v1);

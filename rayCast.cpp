@@ -72,6 +72,13 @@ Eigen::Vector2f Sphere::theta_phi_conversion(Eigen::Vector3f p) {
     return Eigen::Vector2f(theta, phi);
 }
 
+Eigen::Vector3f Sphere::reverse_conversion(Eigen::Vector2f p) {
+    float x = -radius * sin(p(1)) * sin(p(0));
+    float y = radius * cos(p(1));
+    float z = -radius * sin(p(1)) * cos(p(0));
+    return center + Eigen::Vector3f(x, y, z);
+}
+
 World::World() {}
 
 void World::insertLight(float x, float y, float z) {
@@ -135,16 +142,32 @@ bool World::rayCast(Ray r, float threshold, Target &target) {
                 target.normal = (target.point - sphereList[i].center).normalized();
                 target.material = sphereList[i].material;
                 if (sphereList[i].material -> texture != NULL) {
-                    Material *m = sphereList[i].material;
-                    Eigen::Vector2f tp = sphereList[i].theta_phi_conversion(target.point);
-                    int w = (m -> texture -> width() - 1) * tp(0) / 2 / M_PI;
-                    int h = (m -> texture -> height() - 1) * tp(1) / M_PI;
-                    unsigned char r, g, b;
-                    (*(m -> texture)).get_pixel(w, h, r, g, b);
-                    m -> ambient = Eigen::Vector3f(r, g, b) * (m -> texture_a) / 255;
-                    m -> diffuse = Eigen::Vector3f(r, g, b) * (m -> texture_d) / 255;
-                    m -> specular = Eigen::Vector3f(1, 1, 1) * (m -> texture_s);
-                    target.material = m;
+                    if (sphereList[i].material -> bumpmapped) {
+                        Material *m = sphereList[i].material;
+                        Eigen::Vector3f cc = sphereList[i].center;
+                        float rr = sphereList[i].radius;
+
+                        Eigen::Vector2f tp = sphereList[i].theta_phi_conversion(target.point);
+                        int w = (m -> texture -> width() - 1) * tp(0) / 2 / M_PI;
+                        int h = (m -> texture -> height() - 1) * tp(1) / M_PI;
+                        unsigned char r, g, b;
+                        (*(m -> texture)).get_pixel(w, h, r, g, b);
+                        Eigen::Vector3f u = (sphereList[i].reverse_conversion(tp + Eigen::Vector2f(0.01, 0)) - target.point).normalized();
+                        Eigen::Vector3f v = (sphereList[i].reverse_conversion(tp + Eigen::Vector2f(0, 0.01)) - target.point).normalized();
+                        target.normal = target.normal * (b - 128) / 128.0 + u * (r - 128) / 128.0 + v * (g - 128) / 128.0;
+                    }
+                    else {
+                        Material *m = sphereList[i].material;
+                        Eigen::Vector2f tp = sphereList[i].theta_phi_conversion(target.point);
+                        int w = (m -> texture -> width() - 1) * tp(0) / 2 / M_PI;
+                        int h = (m -> texture -> height() - 1) * tp(1) / M_PI;
+                        unsigned char r, g, b;
+                        (*(m -> texture)).get_pixel(w, h, r, g, b);
+                        m -> ambient = Eigen::Vector3f(r, g, b) * (m -> texture_a) / 255;
+                        m -> diffuse = Eigen::Vector3f(r, g, b) * (m -> texture_d) / 255;
+                        m -> specular = Eigen::Vector3f(1, 1, 1) * (m -> texture_s);
+                        target.material = m;
+                    }
                 }
                 minDist = dist;
             }

@@ -19,12 +19,14 @@ public:
     float texture_a;
     float texture_d;
     float texture_s;
+    bool bumpmapped;
     bitmap_image *texture;
 
     Material(){}
     Material(Eigen::Vector3f, Eigen::Vector3f, Eigen::Vector3f, float, float, float, float, float);
     Material(float, float, float, float, float, float, float, float, float, float, float, float, float, float);
     Material(float, float, float, float, float, float, float, float, bitmap_image*);
+    Material(float, float, float, float, float, float, float, float, float, float, float, bitmap_image*, bool);
 };
 
 #endif
