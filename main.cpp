@@ -38,7 +38,9 @@ float data_g[PIXEL_COUNT];
 float data_b[PIXEL_COUNT];
 
 const int RAY_TRACE_DEPTH = 6;
-const float SHADOW_FACTOR = 0.3;
+const float SHADOW_FACTOR = 0.2;
+bool depth = false;
+bool softshadow = false;
 bool supersampling = false;
 
 inline Vector3f pixelRayDirection(float i, float j) {
@@ -49,8 +51,8 @@ Vector3f rayTracer(World &, Ray, int);
 
 // COLORS
 Vector3f BLACK (0.0, 0.0, 0.0);
-Vector3f DARK_GRAY (0.7, 0.7, 0.7);
-Vector3f LIGHT_GRAY (0.2, 0.2, 0.2);
+Vector3f LIGHT_GRAY (0.7, 0.7, 0.7);
+Vector3f DARK_GRAY (0.2, 0.2, 0.2);
 Vector3f WHITE (1.0, 1.0, 1.0);
 Vector3f RED (1.0, 0.0, 0.0);
 Vector3f GREEN (0.0, 1.0, 0.0);
@@ -59,7 +61,7 @@ Vector3f CYAN (0.0, 1.0, 1.0);
 Vector3f MAGENTA (1.0, 0.0, 1.0);
 Vector3f YELLOW (1.0, 1.0, 0.0);
 
-Vector3f default_color = LIGHT_GRAY;
+Vector3f default_color = DARK_GRAY;
 
 // REFRACTION INDICES
 float RI_AIR = 1.0;
@@ -69,15 +71,16 @@ float RI_EMERALD = 1.58;
 float RI_RUBY = 1.76;
 
 // MATERIALS
-Material *ROOM = new Material(0.1, 0.1, 0.1, 0.6, 0.6, 0.6, 0.3, 0.3, 0.3, 0.5, 0.7, 1.0, RI_AIR, RI_AIR);
+Material *ROOM = new Material(0.1, 0.1, 0.1, 0.6, 0.6, 0.6, 0.3, 0.3, 0.3, 0.5, 0.0, 1.0, RI_AIR, RI_AIR);
 Material *EMERALD = new Material(0.0215, 0.1745, 0.0215, 0.07568, 0.61424, 0.07568, 0.633, 0.727811, 0.633, 0.6, 0.3, 0.2, RI_AIR, RI_GLASS);
 Material *RUBY = new Material(0.1745, 0.01175, 0.01175, 0.6142, 0.0414, 0.0414, 0.7278, 0.627, 0.627, 0.6, 0.2, 0.5, RI_AIR, RI_RUBY);
 Material *GOLD = new Material(0.24725, 0.1995, 0.0745, 0.75164, 0.60648, 0.22648, 0.62828, 0.5558, 0.366065, 0.4, 0.0, 1.0, RI_AIR, RI_AIR);
 Material *GOLD_IN_EMERALD = new Material(0.24725, 0.2, 0.0745, 0.75, 0.6, 0.22648, 0.62828, 0.556, 0.366, 0.4, 0.0, 1.0, RI_EMERALD, RI_AIR);
-Material *GLASS = new Material(0, 0, 0, 0, 0, 0, 0.1, 0.1, 0.1, 0.4, 0.0, 0.0, RI_AIR, 0.9);
-Material *CHESSBOARD = new Material(0.1, 0.6, 0.3, 0.6, 0.2, 1.0, 1.0, 1.0, new bitmap_image("textures/chessboard.bmp"));
-Material *WORLDMAP = new Material(0.2, 0.7, 0.1, 0.6, 0.1, 1.0, 1.0, 1.0, new bitmap_image("textures/worldmap.bmp"));
-Material *TEXT = new Material(0.1, 0.6, 0.3, 0.6, 0.2, 1.0, 1.0, 1.0, new bitmap_image("textures/text.bmp"));
+Material *GLASS = new Material(0, 0, 0, 0, 0, 0, 0.1, 0.1, 0.1, 0.4, 0.0, 0.0, RI_AIR, RI_GLASS);
+Material *MIRROR = new Material(0, 0, 0, 0, 0, 0, 0.1, 0.1, 0.1, 0.4, 1.0, 1.0, RI_AIR, RI_AIR);
+Material *CHESSBOARD = new Material(0.1, 0.8, 0.1, 0.6, 0.0, 1.0, 1.0, 1.0, new bitmap_image("textures/chessboard.bmp"));
+Material *WORLDMAP = new Material(0.6, 0.5, 0.1, 0.6, 0.0, 1.0, 1.0, 1.0, new bitmap_image("textures/worldmap.bmp"));
+//Material *TEXT = new Material(0.1, 0.6, 0.3, 0.6, 0.2, 1.0, 1.0, 1.0, new bitmap_image("textures/text.bmp"));
 
 // TEXTURE IMAGES
 //bitmap_image *chessboard = new bitmap_image("textures/chessboard.bmp");
@@ -87,19 +90,28 @@ inline void insertTriangle(World &world, vector<Vector3f>, vector<Vector3f>, Vec
 inline void insertTriangle(World &world, vector<Vector3f>, vector<Vector3f>, vector<Vector2f>, Vector3f, Material *mat);
 inline void insertQuad(World &world, Vector3f v0, Vector3f v1, Vector3f v2, Vector3f v3, Vector3f normal, Material *mat);
 inline void insertCube(World &world, float x1, float x2, float y1, float y2, float z1, float z2, Material *mat);
+inline void insertPyramid(World &world, Vector3f v0, Vector3f v1, Vector3f v2, Vector3f v3, Material *mat);
 
 void insertItems(World &world) {
     // ROOM
-    insertCube(world, 25, -25, 25, -25, 10, -40, ROOM);
+    insertCube(world, 25, -25, 25, -25, 15, -40, ROOM);
 
     // OBJECTS
 //    world.insert(Sphere(Vector3f(1, 6, -7), 3, EMERALD));
 //    world.insert(Sphere(Vector3f(-5, 5, -29), 7, GOLD));
-    world.insert(Sphere(Vector3f(0, 2, -15), 6, WORLDMAP));
-//    world.insert(Sphere(Vector3f(2, 2, 0), 4, GLASS));
 
+//    world.insert(Sphere(Vector3f(-9, 3, -27), 3, WORLDMAP));
+//    world.insert(Sphere(Vector3f(-6, 3, -22), 3, WORLDMAP));
+//    world.insert(Sphere(Vector3f(-3, 3, -17), 3, WORLDMAP));
+    world.insert(Sphere(Vector3f(0, 3, -18), 6, WORLDMAP));
+//    world.insert(Sphere(Vector3f(3, 3, -7), 3, WORLDMAP));
+//    world.insert(Sphere(Vector3f(5, 3, -2), 3, WORLDMAP));
+//    world.insert(Sphere(Vector3f(7, 3, 3), 3, WORLDMAP));
+    world.insert(Sphere(Vector3f(3, 2, -2), 3, GLASS));
+    world.insert(Sphere(Vector3f(-8, 0, -7), 2, MIRROR));
     
-    insertCube(world, 2, 8, -3, 3, -8, -5, EMERALD);
+    insertCube(world, -8, -4, -4, 3, -14, -10, EMERALD);
+    insertPyramid(world, Vector3f(-2, 1.9, -2), Vector3f(0, -1.8, 0), Vector3f(0.6, -1.8, -3.5), Vector3f(-3.8, -1.8, -2), RUBY);
     //insertQuad(world, Vector3f(0, -3, -10), Vector3f(0, 0, -10), Vector3f(3, 0, -10), Vector3f(3, -3, -10), Vector3f(0, 0, 1), EMERALD);
     //insertCube(world, 4, 14, -5, 5, -19, -9, EMERALD);
     //world.insert(Sphere(Vector3f(9, 0, -14), 4, GOLD_IN_EMERALD));
@@ -108,8 +120,8 @@ void insertItems(World &world) {
 
 int main(int argc, char* argv[]) {
     World world;
-    world.insertLight(Vector3f(-4, 15, 3));
-    world.insertLight(Vector3f(8, 0, 5));
+    world.insertLight(Vector3f(0, 20, -20));
+    //world.insertLight(Vector3f(8, 0, 5));
 
     insertItems(world);
 
@@ -118,7 +130,29 @@ int main(int argc, char* argv[]) {
     for (int j = 0; j < HEIGHT; j++) {
         for (int i = 0; i < WIDTH; i++) {
             Vector3f color(0, 0, 0);
-            if (!supersampling) {
+            if (depth) {
+                float shift = VPWIDTH / (WIDTH - 1) * 4;
+                Vector3f camlocbackup = camloc;
+                color += rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH) * 0.25;
+                camloc = camlocbackup + Vector3f(shift, 0, 0);
+                color += rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH) * 0.125;
+                camloc = camlocbackup + Vector3f(-shift, 0, 0);
+                color += rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH) * 0.125;
+                camloc = camlocbackup + Vector3f(0, shift, 0);
+                color += rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH) * 0.125;
+                camloc = camlocbackup + Vector3f(0, -shift, 0);
+                color += rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH) * 0.125;
+                camloc = camlocbackup + Vector3f(shift, shift, 0);
+                color += rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH) * 0.0625;
+                camloc = camlocbackup + Vector3f(shift, -shift, 0);
+                color += rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH) * 0.0625;
+                camloc = camlocbackup + Vector3f(-shift, shift, 0);
+                color += rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH) * 0.0625;
+                camloc = camlocbackup + Vector3f(-shift, -shift, 0);
+                color += rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH) * 0.0625;
+                camloc = camlocbackup;
+            }
+            else if (!supersampling) {
                 color = rayTracer(world, Ray(camloc, pixelRayDirection(i, HEIGHT - j + 1), RI_AIR), RAY_TRACE_DEPTH);
             }
             else {
@@ -162,8 +196,25 @@ inline Vector3f localIllumination(Vector3f point, Vector3f normal, Vector3f rayd
         float difFactor = lightvec.normalized().dot(normal);
         if (difFactor < 0) difFactor *= mat -> alpha - 1;
         float shadow = 1;
-        if (world.rayCast(Ray(point, lightvec), lightvec.norm())) shadow = SHADOW_FACTOR;
-        color += (mat -> diffuse) * difFactor * shadow;
+
+        if (!softshadow) {
+            if (world.rayCast(Ray(point, lightvec), lightvec.norm())) shadow = SHADOW_FACTOR;
+            color += (mat -> diffuse) * difFactor * shadow;
+        }
+        else {
+            int lightcount = 0;
+            int sampling = 3;
+            float lightsize = 3;
+            for (int j = -sampling; j <= sampling; j++) {
+                for (int k = -sampling; k <= sampling; k++) {
+                    Vector3f newlightvec = lightpos + Vector3f(j, 0, k) * lightsize / sampling - point;
+                    if (!world.rayCast(Ray(point, newlightvec), newlightvec.norm())) lightcount++;
+                }
+            }
+            float tcount = (2 * sampling + 1) * (2 * sampling + 1);
+            shadow = (1 - SHADOW_FACTOR) * lightcount / tcount + SHADOW_FACTOR;
+            color += (mat -> diffuse) * difFactor * shadow;
+        }
 
         // Specular
         Vector3f lightout = reflectDirection(-lightvec.normalized(), normal);
@@ -300,3 +351,22 @@ inline void insertCube(World &world, float x1, float x2, float y1, float y2, flo
 
 }
 
+inline void insertPyramid(World &world, Vector3f v0, Vector3f v1, Vector3f v2, Vector3f v3, Material *mat) {
+    vector<Vector3f> ve1, ve2, ve3, ve4;
+    ve1.push_back(v0);
+    ve1.push_back(v1);
+    ve1.push_back(v2);
+    insertTriangle(world, ve1, (v1 - v0).cross(v2 - v0).normalized(), mat);
+    ve2.push_back(v0);
+    ve2.push_back(v2);
+    ve2.push_back(v3);
+    insertTriangle(world, ve2, (v2 - v0).cross(v3 - v0).normalized(), mat);
+    ve3.push_back(v0);
+    ve3.push_back(v3);
+    ve3.push_back(v1);
+    insertTriangle(world, ve3, (v3 - v0).cross(v1 - v0).normalized(), mat);
+    ve4.push_back(v1);
+    ve4.push_back(v2);
+    ve4.push_back(v3);
+    insertTriangle(world, ve4, (v3 - v1).cross(v2 - v1).normalized(), mat);
+}
